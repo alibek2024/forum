@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: forum_app
+    ports:
+      - "8080:8080"
+    volumes:
+      # Это "пробрасывает" папку с базой данных из контейнера на твой комп
+      # Чтобы данные не удалялись при перезагрузке
+      - ./internal/db:/app/internal/db
+    command: tail -f /dev/null

@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    container_name: forum_app
+    ports:
+      - "8080:8080"
+    volumes:
+      # Монтируем текущую папку, чтобы база forum.db была доступна и в контейнере, и на компе
+      - .:/root/
+    restart: always
