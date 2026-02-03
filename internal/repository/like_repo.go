@@ -1,14 +1,14 @@
 package repository
 
 import (
-	"database/sql"
+	"github.com/jmoiron/sqlx"
 )
 
 type LikeRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewLikeRepository(db *sql.DB) *LikeRepository {
+func NewLikeRepository(db *sqlx.DB) *LikeRepository {
 	return &LikeRepository{db: db}
 }
 
@@ -40,4 +40,15 @@ func (r *LikeRepository) DeleteLike(userID, targetID int, targetType string) err
 	query := `DELETE FROM likes WHERE user_id = ? AND target_id = ? AND target_type = ?`
 	_, err := r.db.Exec(query, userID, targetID, targetType)
 	return err
+}
+
+func (r *LikeRepository) GetCommentReactions(commentID int) (likes, dislikes int, err error) {
+	query := `
+		SELECT 
+			COUNT(CASE WHEN value = 1 THEN 1 END),
+			COUNT(CASE WHEN value = -1 THEN 1 END)
+		FROM likes 
+		WHERE target_id = ? AND target_type = 'comment'`
+	err = r.db.QueryRow(query, commentID).Scan(&likes, &dislikes)
+	return
 }

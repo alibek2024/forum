@@ -1,4 +1,4 @@
-.PHONY: build_start stop login db db_tables
+.PHONY: build_start stop login db db_tables clean_all
 
 # Запуск всего проекта
 build_start:
@@ -19,3 +19,9 @@ db:
 # Посмотреть только список таблиц
 db_tables:
 	docker exec -it forum_app sqlite3 forum.db ".tables"
+
+clean_all:
+	docker-compose down -v
+
+clean_DOCKER_NOOOOOOOOOOOOOOO:
+	docker system prune -a --volumes

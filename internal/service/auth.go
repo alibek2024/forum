@@ -11,62 +11,73 @@ import (
 )
 
 type AuthService struct {
-	UserRepo    *repository.UserRepo
-	SessionRepo *repository.SessionRepo
+	userRepo    *repository.UserRepository
+	sessionRepo *repository.SessionRepository
 }
 
-func NewAuthService(u *repository.UserRepo, s *repository.SessionRepo) *AuthService {
-	return &AuthService{UserRepo: u, SessionRepo: s}
+func NewAuthService(u *repository.UserRepository, s *repository.SessionRepository) *AuthService {
+	return &AuthService{userRepo: u, sessionRepo: s}
 }
 
-// Register user
-func (s *AuthService) Register(email, username, password string) (*models.User, error) {
-	existing, _ := s.UserRepo.GetByEmail(email)
-	if existing != nil {
-		return nil, errors.New("email already taken")
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+// Register — хеширует пароль и создает пользователя
+func (s *AuthService) Register(email, username, password string) error {
+	// Хеширование пароля (Бонусное задание ТЗ)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	user := &models.User{
 		Email:        email,
 		Username:     username,
-		PasswordHash: string(hash),
+		PasswordHash: string(hashedPassword),
 	}
 
-	if err := s.UserRepo.Create(user); err != nil {
+	return s.userRepo.CreateUser(user)
+}
+
+// Login — проверяет данные и генерирует UUID сессию
+func (s *AuthService) Login(email, password string) (*models.Session, error) {
+	user, err := s.userRepo.GetByEmail(email)
+	if err != nil {
+		return nil, errors.New("неверный email или пароль")
+	}
+
+	// Сравнение хеша и пароля
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return nil, errors.New("неверный email или пароль")
+	}
+
+	// Создание сессии с UUID (Бонусное задание ТЗ)
+	session := &models.Session{
+		ID:        uuid.New().String(),
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(24 * time.Hour), // Сессия на 24 часа
+	}
+
+	if err := s.sessionRepo.Save(session); err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return session, nil
 }
 
-// Login user
-func (s *AuthService) Login(email, password string) (string, error) {
-	user, err := s.UserRepo.GetByEmail(email)
-	if err != nil || user == nil {
-		return "", errors.New("invalid credentials")
+func (s *AuthService) Logout(sessionID string) error {
+	return s.sessionRepo.Delete(sessionID)
+}
+
+func (s *AuthService) GetUserBySession(sessionID string) (*models.User, error) {
+	session, err := s.sessionRepo.GetByID(sessionID)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+	if time.Now().After(session.ExpiresAt) {
+		s.sessionRepo.Delete(sessionID)
+		return nil, errors.New("сессия истекла")
 	}
 
-	// Create session
-	sessionID := uuid.NewString()
-	expiresAt := time.Now().Add(24 * time.Hour)
-	sess := &models.Session{
-		ID:        sessionID,
-		UserID:    user.ID,
-		ExpiresAt: expiresAt,
-	}
-
-	if err := s.SessionRepo.Create(sess); err != nil {
-		return "", err
-	}
-
-	return sessionID, nil
+	// Тут можно добавить метод в userRepo GetByID
+	return &models.User{ID: session.UserID}, nil
 }

@@ -1,16 +1,15 @@
 package repository
 
 import (
-	"database/sql"
-
 	"github.com/alibek2024/forum/internal/models"
+	"github.com/jmoiron/sqlx"
 )
 
 type SessionRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewSessionRepository(db *sql.DB) *SessionRepository {
+func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 	return &SessionRepository{db: db}
 }
 

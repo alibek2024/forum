@@ -1,1 +1,30 @@
-package templates
+{{define "layout"}}
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Forum Test</title>
+        <style>
+            body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+            nav { margin-bottom: 20px; padding: 10px; background: #f4f4f4; }
+            .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+            .error { color: red; }
+        </style>
+    </head>
+    <body>
+    <nav>
+        <a href="/">Главная</a> |
+        {{if .User}}
+            <span>Привет, <b>{{.User.Username}}</b></span> |
+            <a href="/post/create">Создать пост</a> |
+            <a href="/logout">Выход</a>
+        {{else}}
+            <a href="/login">Вход</a> | <a href="/register">Регистрация</a>
+        {{end}}
+    </nav>
+    <main>
+        {{template "content" .}}
+    </main>
+    </body>
+    </html>
+{{end}}

@@ -1,0 +1,62 @@
+{{define "content"}}
+  <section class="create-post-container">
+    <h2>Создать новый пост</h2>
+
+    <form action="/post/create" method="POST" enctype="multipart/form-data" class="post-form">
+      <div class="form-group">
+        <label for="title">Заголовок:</label>
+        <input type="text" id="title" name="title" placeholder="Введите заголовок..." required>
+      </div>
+
+      <div class="form-group">
+        <label for="categories">Категории (через запятую):</label>
+        <input type="text" id="categories" name="categories"
+               placeholder="например: golang, мемы, новости" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label>Изображения:</label>
+        <div class="file-upload-wrapper">
+          <input type="file" id="image" name="images" accept="image/*" multiple onchange="previewFiles()">
+          <div id="preview-container" class="preview-box">
+            <span class="placeholder">Превратите ваш пост в шедевр (выберите фото)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="content">Текст поста:</label>
+        <textarea id="content" name="content" rows="8" placeholder="О чем вы думаете?" required></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">Опубликовать</button>
+        <a href="/" class="btn-cancel">Отмена</a>
+      </div>
+    </form>
+  </section>
+
+  <script>
+    function previewFiles() {
+      const container = document.getElementById('preview-container');
+      const files = document.getElementById('image').files;
+      container.innerHTML = '';
+
+      if (files.length === 0) {
+        container.innerHTML = '<span class="placeholder">Файлы не выбраны</span>';
+        return;
+      }
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'preview-img';
+          container.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+{{end}}

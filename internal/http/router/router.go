@@ -4,37 +4,43 @@ import (
 	"net/http"
 
 	"github.com/alibek2024/forum/internal/http/handlers"
+	"github.com/alibek2024/forum/internal/http/middleware"
 )
 
 func NewRouter(
-	authHandler *handlers.AuthHandler,
-	postHandler *handlers.PostHandler,
-	commentHandler *handlers.CommentHandler,
-	likeHandler *handlers.LikeHandler,
-) http.Handler {
-
+	authH *handlers.AuthHandler,
+	postH *handlers.PostHandler,
+	commH *handlers.CommentHandler,
+	likeH *handlers.LikeHandler,
+	authM *middleware.AuthMiddleware,
+) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// health check
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("forum is running"))
-	})
+	// СТАТИКА (CSS, JS)
+	fileServer := http.FileServer(http.Dir("./web/static"))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	// auth
-	mux.HandleFunc("/register", authHandler.Register)
-	mux.HandleFunc("/login", authHandler.Login)
-	mux.HandleFunc("/logout", authHandler.Logout)
+	// AUTH
+	mux.HandleFunc("/register", authH.Register)
+	mux.HandleFunc("/login", authH.Login)
+	mux.HandleFunc("/logout", authH.Logout)
 
-	// posts
-	mux.HandleFunc("/posts", postHandler.List)          // GET
-	mux.HandleFunc("/posts/create", postHandler.Create) // POST
+	// POSTS (Публичные)
+	mux.HandleFunc("/", authM.CheckAuth(postH.Index)) // Index сам решит, что показать гостю
+	mux.HandleFunc("/post", authM.CheckAuth(postH.Show))
 
-	// comments
-	mux.HandleFunc("/comments/create", commentHandler.Create)
+	// POSTS (Приватные - только для авторизованных)
+	mux.HandleFunc("/post/create", authM.CheckAuth(postH.Create))
+	mux.HandleFunc("/post/edit", authM.CheckAuth(postH.Update))
+	mux.HandleFunc("/post/delete", authM.CheckAuth(postH.Delete))
 
-	// likes
-	mux.HandleFunc("/likes", likeHandler.Toggle)
+	// COMMENTS
+	mux.HandleFunc("/comment/create", authM.CheckAuth(commH.Create))
+	mux.HandleFunc("/comment/edit", authM.CheckAuth(commH.Update))
+	mux.HandleFunc("/comment/delete", authM.CheckAuth(commH.Delete))
+
+	// LIKES
+	mux.HandleFunc("/like", authM.CheckAuth(likeH.HandleLike))
 
 	return mux
 }

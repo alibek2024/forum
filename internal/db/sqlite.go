@@ -1,36 +1,31 @@
 package db
 
 import (
-	"database/sql"
-	"fmt"
 	"os"
 
-	_ "modernc.org/sqlite"
+	"github.com/jmoiron/sqlx"
+	_ "modernc.org/sqlite" // Используем этот драйвер вместо mattn
 )
 
-func InitSQLite(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", dbPath)
+func InitSQLite(dbPath string, schemaPath string) (*sqlx.DB, error) {
+	// Добавляем параметр _pragma=foreign_keys(1) прямо в путь к файлу
+	// Для драйвера "sqlite" (modernc.org) это делается так:
+	dsn := dbPath + "?_pragma=foreign_keys(1)"
+
+	db, err := sqlx.Connect("sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	// Читаем и выполняем схему
+	schema, err := os.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := db.Exec(string(schema)); err != nil {
 		return nil, err
 	}
 
 	return db, nil
-}
-
-func RunMigrations(db *sql.DB, path string) error {
-	sqlBytes, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read schema: %w", err)
-	}
-
-	_, err = db.Exec(string(sqlBytes))
-	if err != nil {
-		return fmt.Errorf("exec schema: %w", err)
-	}
-
-	return nil
 }

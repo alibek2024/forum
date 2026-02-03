@@ -1,16 +1,15 @@
 package repository
 
 import (
-	"database/sql"
-
 	"github.com/alibek2024/forum/internal/models"
+	"github.com/jmoiron/sqlx"
 )
 
 type CommentRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewCommentRepository(db *sql.DB) *CommentRepository {
+func NewCommentRepository(db *sqlx.DB) *CommentRepository {
 	return &CommentRepository{db: db}
 }
 
@@ -43,4 +42,27 @@ func (r *CommentRepository) GetByPostID(postID int) ([]models.Comment, error) {
 		comments = append(comments, c)
 	}
 	return comments, nil
+}
+
+// UPDATE: Редактировать комментарий
+func (r *CommentRepository) Update(commentID, userID int, newContent string) error {
+	query := `UPDATE comments SET content = ? WHERE id = ? AND user_id = ?`
+	_, err := r.db.Exec(query, newContent, commentID, userID)
+	return err
+}
+
+// DELETE: Удалить комментарий
+func (r *CommentRepository) Delete(commentID, userID int) error {
+	query := `DELETE FROM comments WHERE id = ? AND user_id = ?`
+	_, err := r.db.Exec(query, commentID, userID)
+	return err
+}
+func (r *CommentRepository) GetByID(id int) (*models.Comment, error) {
+	query := `SELECT id, post_id, user_id, content, created_at FROM comments WHERE id = ?`
+	c := &models.Comment{}
+	err := r.db.QueryRow(query, id).Scan(&c.ID, &c.PostID, &c.UserID, &c.Content, &c.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

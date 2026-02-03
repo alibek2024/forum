@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -9,65 +8,76 @@ import (
 )
 
 type AuthHandler struct {
-	Service *service.AuthService
+	authService *service.AuthService
 }
 
 func NewAuthHandler(s *service.AuthService) *AuthHandler {
-	return &AuthHandler{Service: s}
+	return &AuthHandler{authService: s}
 }
 
-type registerRequest struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// Register new user
+// Register — форма и обработка регистрации
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	var req registerRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+	if r.Method == http.MethodGet {
+		renderTemplate(w, "register", nil)
 		return
 	}
 
-	user, err := h.Service.Register(req.Email, req.Username, req.Password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	if r.Method == http.MethodPost {
+		email := r.FormValue("email")
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+
+		if err := h.authService.Register(email, username, password); err != nil {
+			http.Error(w, "Registration failed: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
 }
 
-type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-// Login user
+// Login — проверка данных и установка Cookie с UUID
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var req loginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+	if r.Method == http.MethodGet {
+		renderTemplate(w, "login", nil)
 		return
 	}
 
-	sessionID, err := h.Service.Login(req.Email, req.Password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
+	if r.Method == http.MethodPost {
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		session, err := h.authService.Login(email, password)
+		if err != nil {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// Устанавливаем куку (ТЗ требует UUID + Expiration Date)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    session.ID,
+			Expires:  session.ExpiresAt,
+			HttpOnly: true, // Защита от JS (XSS)
+			Path:     "/",
+		})
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+// Logout — удаление сессии
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		h.authService.Logout(cookie.Value)
 	}
 
-	// Set cookie
+	// Удаляем куку из браузера
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
-		Path:     "/",
+		Name:    "session_token",
+		Value:   "",
+		Expires: time.Now().Add(-1 * time.Hour),
+		Path:    "/",
 	})
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("login successful"))
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
