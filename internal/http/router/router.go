@@ -18,7 +18,8 @@ func NewRouter(
 
 	// СТАТИКА (CSS, JS)
 	fileServer := http.FileServer(http.Dir("./web/static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+
 	// AUTH
 	mux.HandleFunc("/register", authH.Register)
 	mux.HandleFunc("/login", authH.Login)
