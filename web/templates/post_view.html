@@ -1,79 +1,98 @@
 {{define "content"}}
-  <article>
-    <h1>{{.Post.Title}}</h1>
+  <div class="post-glass-container">
 
-    <div class="post-tags">
-      {{range .Post.Categories}}
-        <span class="tag">#{{.}}</span>
-      {{end}}
-    </div>
+    <!-- Основной пост -->
+    <article>
+      <h1 class="post-title">{{.Post.Title}}</h1>
 
-    <p>{{.Post.Content}}</p>
+      <!-- Хештеги -->
+      <div class="post-tags">
+        {{range .Post.Categories}}
+          <span class="tag">#{{.}}</span>
+        {{end}}
+      </div>
 
-    <div class="post-gallery" style="display: flex; flex-wrap  : wrap; gap: 15px; margin: 20px 0;">
-      {{/* Сначала проверяем основное фото */}}
-      {{if .Post.ImageURL}}
-        <img src="/{{.Post.ImageURL}}" alt="Main image" style="max-width: 45%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-      {{end}}
+      <!-- Галерея -->
+      <div class="post-gallery">
+        {{if .Post.ImageURL}}
+          <img src="/{{.Post.ImageURL}}" alt="Main image" class="post-img">
+        {{end}}
 
-      {{/* Затем выводим дополнительные фото из новой таблицы */}}
-      {{range .Post.Images}}
-        <img src="/{{.}}" alt="Additional image" style="max-width: 45%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-      {{end}}
-    </div>
+        {{range .Post.Images}}
+          <img src="/{{.}}" alt="Additional image" class="post-img">
+        {{end}}
+      </div>
 
-    <hr>
-    {{if .User}}
-      {{if eq .User.ID .Post.UserID}}
-        <a href="/post/edit?id={{.Post.ID}}">📝 Редактировать</a> |
-        <a href="/post/delete?id={{.Post.ID}}" style="color:red;" onclick="return confirm('Удалить пост?')">🗑️ Удалить</a>
-      {{end}}
-    {{end}}
-  </article>
+      <p class="post-content">{{.Post.Content}}</p>
 
-
-  <div class="post-actions">
-    <form action="/like" method="POST" style="display: inline;">
-      <input type="hidden" name="target_id" value="{{.Post.ID}}">
-      <input type="hidden" name="target_type" value="post">
-      <input type="hidden" name="value" value="1">
-      <button type="submit">👍 {{.Post.Likes}}</button>
-    </form>
-
-    <form action="/like" method="POST" style="display: inline;">
-      <input type="hidden" name="target_id" value="{{.Post.ID}}">
-      <input type="hidden" name="target_type" value="post">
-      <input type="hidden" name="value" value="-1">
-      <button type="submit">👎 {{.Post.Dislikes}}</button>
-    </form>
-
-    <span>Автор: {{.Post.AuthorName}}</span>
-  </div>
-  <hr>
-
-  <h3>Комментарии</h3>
-  {{if .User}}
-    <form action="/comment/create" method="POST">
-      <input type="hidden" name="post_id" value="{{.Post.ID}}">
-      <textarea name="content" placeholder="Ваш комментарий..." required></textarea><br>
-      <button type="submit">Отправить</button>
-    </form>
-  {{else}}
-    <p><a href="/login">Войдите</a>, чтобы оставлять комментарии и ставить лайки.</p>
-  {{end}}
-
-  {{range .Comments}}
-    <div style="border-left: 2px solid #eee; padding-left: 10px; margin-top: 10px;">
-      <p>{{.Content}}</p>
-      <small>Автор: {{.AuthorName}} | 👍 {{.Likes}} | 👎 {{.Dislikes}}</small>
-
-      {{if $.User}}
-        <a href="/like?id={{.ID}}&type=comment&value=1">👍</a>
-        <a href="/like?id={{.ID}}&type=comment&value=-1">👎</a>
-        {{if eq $.User.ID .UserID}}
-          | <a href="/comment/delete?id={{.ID}}" style="color: gray;">удалить</a>
+      {{if .User}}
+        {{if eq .User.ID .Post.UserID}}
+          <div class="post-owner-actions">
+            <a href="/post/edit?id={{.Post.ID}}" class="vista-btn-small">📝 Редактировать</a>
+            <a href="/post/delete?id={{.Post.ID}}" class="vista-btn-small delete" onclick="return confirm('Удалить пост?')">🗑️ Удалить</a>
+          </div>
         {{end}}
       {{end}}
+    </article>
+
+    <!-- Лайки / дизлайки / автор -->
+    <div class="post-actions">
+      <form action="/like" method="POST" class="like-form">
+        <input type="hidden" name="target_id" value="{{.Post.ID}}">
+        <input type="hidden" name="target_type" value="post">
+        <input type="hidden" name="value" value="1">
+        <button type="submit" class="like-btn">👍 {{.Post.Likes}}</button>
+      </form>
+
+      <form action="/like" method="POST" class="like-form">
+        <input type="hidden" name="target_id" value="{{.Post.ID}}">
+        <input type="hidden" name="target_type" value="post">
+        <input type="hidden" name="value" value="-1">
+        <button type="submit" class="dislike-btn">👎 {{.Post.Dislikes}}</button>
+      </form>
+
+      <span class="post-author">Автор: {{.Post.AuthorName}}</span>
     </div>
-  {{end}}
+
+    <!-- Комментарии -->
+    <h3>Комментарии</h3>
+
+    {{if .User}}
+      <form action="/comment/create" method="POST" class="comment-form">
+        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+        <textarea name="content" placeholder="Ваш комментарий..." required></textarea><br>
+        <button type="submit" class="vista-btn-small">Отправить</button>
+      </form>
+    {{else}}
+      <p><a href="/login" class="auth-b">Войдите</a>, чтобы оставлять комментарии и ставить лайки.</p>
+    {{end}}
+
+    {{range .Comments}}
+      <div class="comment-card">
+        <p>{{.Content}}</p>
+        <small>Автор: {{.AuthorName}}</small>
+        <div class="comment-actions">
+          {{if $.User}}
+            <form action="/like" method="POST" class="like-form-inline">
+              <input type="hidden" name="target_id" value="{{.ID}}">
+              <input type="hidden" name="target_type" value="comment">
+              <input type="hidden" name="value" value="1">
+              <button type="submit" class="like-btn-inline">👍 {{.Likes}}</button>
+            </form>
+            <form action="/like" method="POST" class="like-form-inline">
+              <input type="hidden" name="target_id" value="{{.ID}}">
+              <input type="hidden" name="target_type" value="comment">
+              <input type="hidden" name="value" value="-1">
+              <button type="submit" class="dislike-btn-inline">👎 {{.Dislikes}}</button>
+            </form>
+
+            {{if eq $.User.ID .UserID}}
+              <a href="/comment/delete?id={{.ID}}" class="vista-link delete">удалить</a>
+            {{end}}
+          {{end}}
+        </div>
+      </div>
+    {{end}}
+
+  </div>
 {{end}}

@@ -1,34 +1,32 @@
 {{define "content"}}
-  <h2>Редактировать пост</h2>
-  <form action="/post/edit" method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="id" value="{{.Post.ID}}">
+  <section class="edit-post-container">
+    <h2>Редактировать пост</h2>
 
-    <div>
-      <label>Заголовок:</label><br>
-      <input type="text" name="title" value="{{.Post.Title}}" required style="width: 100%;">
-    </div>
+    <form action="/post/edit" method="POST" enctype="multipart/form-data" class="post-form">
+      <input type="hidden" name="id" value="{{.Post.ID}}">
 
-    <br>
+      <div class="form-group">
+        <label for="title">Заголовок:</label>
+        <input type="text" id="title" name="title" value="{{.Post.Title}}" required>
+      </div>
 
-    <div>
-      <label>Текст поста:</label><br>
-      <textarea name="content" rows="10" required style="width: 100%;">{{.Post.Content}}</textarea>
-    </div>
+      <div class="form-group">
+        <label for="content">Текст поста:</label>
+        <textarea id="content" name="content" rows="10" required>{{.Post.Content}}</textarea>
+      </div>
 
-    <br>
+      <div class="form-group">
+        <label>Обновить фото (необязательно):</label>
+        {{if .Post.ImageURL}}
+          <p><small>Текущее фото: {{.Post.ImageURL}}</small></p>
+        {{end}}
+        <input type="file" name="image" accept="image/*">
+      </div>
 
-    {{/* НОВОЕ ПОЛЕ ДЛЯ ФОТО */}}
-    <div>
-      <label>Обновить фото (необязательно):</label><br>
-      {{if .Post.ImageURL}}
-        <p><small>Текущее фото: {{.Post.ImageURL}}</small></p>
-      {{end}}
-      <input type="file" name="image" accept="image/*">
-    </div>
-
-    <br>
-
-    <button type="submit">Сохранить изменения</button>
-    <a href="/post?id={{.Post.ID}}">Отмена</a>
-  </form>
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">Сохранить изменения</button>
+        <a href="/post?id={{.Post.ID}}" class="btn-cancel">Отмена</a>
+      </div>
+    </form>
+  </section>
 {{end}}
