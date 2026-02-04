@@ -21,19 +21,24 @@ func (s *PostService) CreatePost(post *models.Post, categories []string) (int, e
 	return s.repo.Create(post, categories)
 }
 
-func (s *PostService) GetAllPosts() ([]models.Post, error) {
-	posts, err := s.repo.GetAll()
+func (s *PostService) GetAllPosts(category string, filter string, userID int) ([]models.Post, error) {
+	posts, err := s.repo.GetAll(category, filter, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Для каждого поста подтягиваем кол-во лайков/дизлайков
 	for i := range posts {
-		likes, dislikes, _ := s.likeRepo.GetCounts(posts[i].ID, "post")
-		posts[i].Likes = likes
-		posts[i].Dislikes = dislikes
-	}
+		// 1. Лайки (через LikeRepo)
+		l, d, _ := s.likeRepo.GetCounts(posts[i].ID, "post")
+		posts[i].Likes = l
+		posts[i].Dislikes = d
 
+		// 2. Категории (если fetchPosts их вдруг не подтянул)
+		if len(posts[i].Categories) == 0 {
+			cats, _ := s.repo.GetCategoriesByPostID(posts[i].ID)
+			posts[i].Categories = cats
+		}
+	}
 	return posts, nil
 }
 
