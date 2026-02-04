@@ -32,26 +32,21 @@ func (h *PostHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := r.Context().Value(middleware.UserKey).(*models.User)
 
-	// Логика фильтрации (ТЗ: категории, созданные посты, лайкнутые посты)
+	// Собираем параметры из URL
 	category := r.URL.Query().Get("category")
-	filterMine := r.URL.Query().Get("filter") == "created"
-	filterLiked := r.URL.Query().Get("filter") == "liked"
+	filter := r.URL.Query().Get("filter")
 
-	var posts []models.Post
-	var err error
-
-	if filterMine && user != nil {
-		posts, err = h.postService.GetPostsByUser(user.ID)
-	} else if filterLiked && user != nil {
-		posts, err = h.postService.GetLikedPosts(user.ID)
-	} else if category != "" {
-		posts, err = h.postService.GetPostsByCategory(category)
-	} else {
-		posts, err = h.postService.GetAllPosts()
+	userID := 0
+	if user != nil {
+		userID = user.ID
 	}
 
+	// ВЫЗЫВАЕМ ОДИН УНИВЕРСАЛЬНЫЙ МЕТОД
+	// Теперь сервис сам решит, как фильтровать, и при этом подтянет лайки
+	posts, err := h.postService.GetAllPosts(category, filter, userID)
+
 	if err != nil {
-		log.Printf("ОШИБКА БАЗЫ: %v", err) // <--- Добавь это!
+		log.Printf("ОШИБКА: %v", err)
 		http.Error(w, "Ошибка загрузки постов", http.StatusInternalServerError)
 		return
 	}

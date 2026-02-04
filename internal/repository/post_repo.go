@@ -115,9 +115,40 @@ func (r *PostRepository) attachCategories(tx *sqlx.Tx, postID int, tags []string
 }
 
 // READ (ALL): Все посты
-func (r *PostRepository) GetAll() ([]models.Post, error) {
-	// Теперь fetchPosts вернет посты из новой таблицы со всеми полями
-	return r.fetchPosts(basePostSelect + " ORDER BY p.created_at DESC")
+func (r *PostRepository) GetAll(category string, filter string, userID int) ([]models.Post, error) {
+	query := basePostSelect + " WHERE 1=1 "
+	var args []interface{}
+
+	if category != "" {
+		query += " AND p.id IN (SELECT post_id FROM post_categories pc JOIN categories c ON pc.category_id = c.id WHERE c.name = ?) "
+		args = append(args, category)
+	}
+
+	if filter == "created" && userID != 0 {
+		query += " AND p.user_id = ? "
+		args = append(args, userID)
+	}
+
+	if filter == "liked" && userID != 0 {
+		// ВНИМАНИЕ: используем value = 1, так как в твоей схеме колонка называется value
+		query += " AND p.id IN (SELECT target_id FROM likes WHERE user_id = ? AND target_type = 'post' AND value = 1) "
+		args = append(args, userID)
+	}
+
+	query += " GROUP BY p.id ORDER BY p.created_at DESC"
+	return r.fetchPosts(query, args...)
+}
+
+func (r *PostRepository) GetCategoriesByPostID(postID int) ([]string, error) {
+	var categories []string
+	query := `
+        SELECT c.name 
+        FROM categories c 
+        JOIN post_categories pc ON c.id = pc.category_id 
+        WHERE pc.post_id = ?`
+
+	err := r.db.Select(&categories, query, postID)
+	return categories, err
 }
 
 // READ (ONE): Один пост по ID
@@ -232,17 +263,22 @@ func (r *PostRepository) fetchPosts(query string, args ...interface{}) ([]models
 	}
 
 	for i := range posts {
-		// Инициализируем, чтобы не было nil
+		// 1. Инициализация слайсов
 		posts[i].Images = []string{}
+		posts[i].Categories = []string{}
 
-		// Подтягиваем все картинки для конкретного поста из таблицы post_images
-		// Если хочешь только для превью, можно добавить LIMIT 1
+		// 2. Подтягиваем картинки
 		imgQuery := `SELECT path FROM post_images WHERE post_id = ?`
-		err := r.db.Select(&posts[i].Images, imgQuery, posts[i].ID)
-		if err != nil {
-			// Если картинок нет, просто идем дальше
-			continue
-		}
+		r.db.Select(&posts[i].Images, imgQuery, posts[i].ID)
+
+		// 3. ПОДТЯГИВАЕМ КАТЕГОРИИ (Reddit-style)
+		// Без этого твой {{range .Categories}} в шаблоне будет пустым!
+		catQuery := `
+          SELECT c.name 
+          FROM categories c 
+          JOIN post_categories pc ON c.id = pc.category_id 
+          WHERE pc.post_id = ?`
+		r.db.Select(&posts[i].Categories, catQuery, posts[i].ID)
 	}
 
 	return posts, nil
