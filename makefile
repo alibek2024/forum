@@ -1,4 +1,4 @@
-.PHONY: build_start stop login db db_tables clean_all
+.PHONY: build_start stop login db db_tables clean_all clean_DOCKER_NOOOOOOOOOOOOOOO
 
 # Запуск всего проекта
 build_start:

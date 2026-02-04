@@ -299,3 +299,11 @@ func (r *PostRepository) GetPostByID(id int) (*models.Post, error) {
 	err := r.db.Get(&post, query, id)
 	return &post, err
 }
+
+func (r *PostRepository) GetAllCategories() ([]string, error) {
+	var categories []string
+	// Выбираем только те названия, которые реально существуют в таблице categories
+	query := "SELECT name FROM categories ORDER BY name ASC"
+	err := r.db.Select(&categories, query)
+	return categories, err
+}

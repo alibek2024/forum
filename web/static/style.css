@@ -380,7 +380,7 @@ h1 {
 .tag {
     display: inline-block;
     background: rgba(255, 255, 255, 0.15);
-    color: #dbe6f7;
+    color: #333333;
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 12px;

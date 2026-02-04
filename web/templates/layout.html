@@ -15,8 +15,9 @@
             <form action="/" method="GET" class="vista-filters">
                 <select name="category">
                     <option value="">Все категории</option>
-                    <option value="java">Java</option>
-                    <option value="go">Go</option>
+                    {{range .AllCategories}}
+                        <option value="{{.}}" {{if eq $.CurrentCat .}}selected{{end}}>{{.}}</option>
+                    {{end}}
                 </select>
 
                 {{if .User}}

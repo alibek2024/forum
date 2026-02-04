@@ -41,19 +41,28 @@ func (h *PostHandler) Index(w http.ResponseWriter, r *http.Request) {
 		userID = user.ID
 	}
 
-	// ВЫЗЫВАЕМ ОДИН УНИВЕРСАЛЬНЫЙ МЕТОД
-	// Теперь сервис сам решит, как фильтровать, и при этом подтянет лайки
+	// Получаем посты (с лайками и тегами внутри)
 	posts, err := h.postService.GetAllPosts(category, filter, userID)
-
 	if err != nil {
 		log.Printf("ОШИБКА: %v", err)
 		http.Error(w, "Ошибка загрузки постов", http.StatusInternalServerError)
 		return
 	}
 
+	// НОВОЕ: Получаем список всех существующих категорий для <select>
+	allCategories, err := h.postService.GetAllCategories()
+	if err != nil {
+		log.Printf("Ошибка при получении категорий: %v", err)
+		// Не прерываемся, просто список будет пустым
+	}
+
 	renderTemplate(w, "index", map[string]interface{}{
-		"Posts": posts,
-		"User":  user,
+		"Posts":         posts,
+		"User":          user,
+		"AllCategories": allCategories, // Передаем динамический список
+		"CurrentCat":    category,      // Чтобы сохранить выбор в выпадающем списке
+		"CurrentFilter": filter,        // Чтобы сохранить выбор фильтра (Мои/Лайкнутые)
+		"IsIndex":       true,          // Флаг для отображения фильтров только тут
 	})
 }
 

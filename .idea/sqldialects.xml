@@ -3,7 +3,6 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/internal/repository/comment_repo.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/internal/repository/like_repo.go" dialect="SQLite" />
-    <file url="file://$PROJECT_DIR$/internal/repository/post_repo.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/internal/repository/session_repo.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/internal/repository/user_repo.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/schema.sql" dialect="GenericSQL" />

@@ -103,3 +103,8 @@ func (s *PostService) GetPostsByCategory(category string) ([]models.Post, error)
 func (s *PostService) AddImages(postID int, paths []string) error {
 	return s.repo.AddImages(postID, paths)
 }
+
+// GetAllCategories возвращает список всех уникальных категорий из базы данных
+func (s *PostService) GetAllCategories() ([]string, error) {
+	return s.repo.GetAllCategories()
+}
