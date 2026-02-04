@@ -4,27 +4,49 @@
     <head>
         <meta charset="UTF-8">
         <title>Forum Test</title>
-        <style>
-            body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
-            nav { margin-bottom: 20px; padding: 10px; background: #f4f4f4; }
-            .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-            .error { color: red; }
-        </style>
+        <link rel="stylesheet" href="/static/style.css">
     </head>
-    <body>
-    <nav>
-        <a href="/">Главная</a> |
-        {{if .User}}
-            <span>Привет, <b>{{.User.Username}}</b></span> |
-            <a href="/post/create">Создать пост</a> |
-            <a href="/logout">Выход</a>
-        {{else}}
-            <a href="/login">Вход</a> | <a href="/register">Регистрация</a>
-        {{end}}
+    <body class="vista-bg">
+
+    <nav class="vista-navbar">
+        <div class="nav-left">
+            <a href="/" class="vista-logo">Forum</a>
+
+            <form action="/" method="GET" class="vista-filters">
+                <select name="category">
+                    <option value="">Все категории</option>
+                    <option value="java">Java</option>
+                    <option value="go">Go</option>
+                </select>
+
+                {{if .User}}
+                    <select name="filter">
+                        <option value="">Все посты</option>
+                        <option value="created">Мои посты</option>
+                        <option value="liked">Лайкнутые</option>
+                    </select>
+                {{end}}
+
+                <button type="submit">Показать</button>
+            </form>
+        </div>
+
+        <div class="nav-right">
+            {{if .User}}
+                <span class="vista-user">👤 {{.User.Username}}</span>
+                <a href="/post/create" class="vista-btn">Создать</a>
+                <a href="/logout" class="vista-link">Выход</a>
+            {{else}}
+                <a href="/login" class="vista-link">Вход</a>
+                <a href="/register" class="vista-btn">Регистрация</a>
+            {{end}}
+        </div>
     </nav>
-    <main>
+
+    <main class="container">
         {{template "content" .}}
     </main>
+
     </body>
     </html>
 {{end}}

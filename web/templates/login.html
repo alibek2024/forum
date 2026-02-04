@@ -1,8 +1,28 @@
 {{define "content"}}
-  <h2>Вход</h2>
-  <form action="/login" method="POST">
-    <input type="email" name="email" placeholder="Email" required><br><br>
-    <input type="password" name="password" placeholder="Password" required><br><br>
-    <button type="submit">Войти</button>
-  </form>
+  <div class="auth-wrapper">
+    <form class="auth-card" action="/login" method="POST">
+      <h2>Вход</h2>
+
+      <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+      >
+
+      <input
+              type="password"
+              name="password"
+              placeholder="Пароль"
+              required
+      >
+
+      <button type="submit">Войти</button>
+
+      <p class="auth-hint">
+        Нет аккаунта?
+        <a href="/register">Зарегистрироваться</a>
+      </p>
+    </form>
+  </div>
 {{end}}

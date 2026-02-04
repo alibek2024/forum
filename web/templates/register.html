@@ -1,9 +1,35 @@
 {{define "content"}}
-  <h2>Регистрация</h2>
-  <form action="/register" method="POST">
-    <input type="email" name="email" placeholder="Email" required><br><br>
-    <input type="text" name="username" placeholder="Username" required><br><br>
-    <input type="password" name="password" placeholder="Password" required><br><br>
-    <button type="submit">Зарегистрироваться</button>
-  </form>
+  <div class="auth-wrapper">
+    <form class="auth-card" action="/register" method="POST">
+      <h2>Регистрация</h2>
+
+      <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+      >
+
+      <input
+              type="text"
+              name="username"
+              placeholder="Имя пользователя"
+              required
+      >
+
+      <input
+              type="password"
+              name="password"
+              placeholder="Пароль"
+              required
+      >
+
+      <button type="submit">Зарегистрироваться</button>
+
+      <p class="auth-hint">
+        Уже есть аккаунт?
+        <a href="/login">Войти</a>
+      </p>
+    </form>
+  </div>
 {{end}}
